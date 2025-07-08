@@ -143,12 +143,12 @@ app.get('/', (req, res) => {
                     <h2>系统配置</h2>
                     <div class="config-box">
                         <div class="config-item">
-                            <span class="config-label">OAuth2 API服务:</span>
-                            <span class="config-value">http://115.190.80.75:7009 (公网) / http://localhost:7009 (本地)</span>
+                            <span class="config-label">认证中心 (线上服务):</span>
+                            <span class="config-value">http://115.190.80.75:7009</span>
                         </div>
                         <div class="config-item">
-                            <span class="config-label">演示页面:</span>
-                            <span class="config-value">http://115.190.80.75:7008 (公网) / http://localhost:7008 (本地)</span>
+                            <span class="config-label">第三方应用演示:</span>
+                            <span class="config-value">http://localhost:7008 (本页面)</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Client ID:</span>
@@ -163,23 +163,28 @@ app.get('/', (req, res) => {
                             <span class="config-value">localhost:* 和 115.190.80.75:*</span>
                         </div>
                     </div>
+                    <div style="background: #e7f3ff; padding: 12px; margin-top: 10px; border-left: 4px solid #007bff;">
+                        <strong>使用说明:</strong><br>
+                        • 本页面模拟第三方应用<br>
+                        • 点击授权按钮将跳转到线上认证中心登录<br>
+                        • 登录成功后回调到本页面完成OAuth2流程
+                    </div>
                 </div>
 
                 <!-- 快速测试 -->
                 <div class="section">
-                    <h2>快速测试</h2>
+                    <h2>快速体验OAuth2流程</h2>
                     <div style="margin-bottom: 15px;">
-                        <button class="btn" onclick="startOAuthFlow('local')" style="margin-right: 10px;">
-                            本地开发测试 (localhost回调)
-                        </button>
-                        <button class="btn" onclick="startOAuthFlow('online')" style="background: #28a745;">
-                            在线环境测试 (公网回调)
+                        <button class="btn" onclick="startOAuthFlow()" style="background: #28a745; font-size: 16px; padding: 15px 30px;">
+                            开始OAuth2授权流程
                         </button>
                     </div>
-                    <div style="background: #f8f9fa; padding: 10px; font-size: 14px; color: #666; border-left: 4px solid #007bff;">
-                        <strong>选择说明:</strong><br>
-                        • <strong>本地开发测试:</strong> 回调到localhost:7008，适合本地调试<br>
-                        • <strong>在线环境测试:</strong> 回调到115.190.80.75:7008，适合在线演示
+                    <div style="background: #f8f9fa; padding: 12px; font-size: 14px; color: #666; border-left: 4px solid #28a745;">
+                        <strong>流程说明:</strong><br>
+                        1. 点击按钮跳转到线上认证中心 (115.190.80.75:7009)<br>
+                        2. 使用测试账号登录 (如: 213001001 / JYc1g3e5BccjxPr)<br>
+                        3. 授权成功后自动回调到本页面<br>
+                        4. 查看完整的OAuth2授权码和令牌信息
                     </div>
                 </div>
 
@@ -188,13 +193,13 @@ app.get('/', (req, res) => {
                     <h2>手动测试步骤</h2>
                     
                     <div style="background: #f8f9fa; padding: 12px; margin-bottom: 15px; border-left: 4px solid #007bff;">
-                        <strong>测试模式:</strong>
-                        <label style="display: inline-block; margin-left: 20px; margin-right: 20px;">
-                            <input type="radio" name="testMode" value="local" checked onchange="currentMode='local'"> 本地开发 (localhost)
-                        </label>
-                        <label style="display: inline-block;">
-                            <input type="radio" name="testMode" value="online" onchange="currentMode='online'"> 在线环境 (115.190.80.75)
-                        </label>
+                        <strong>智能回调机制:</strong> 
+                        <ul style="margin: 8px 0 0 20px; font-size: 14px;">
+                            <li>认证中心: 线上服务 (115.190.80.75:7009)</li>
+                            <li>回调地址: JavaScript自动检测当前访问地址并构建对应的回调URL</li>
+                            <li>例如: 访问 localhost:7008 → 回调 localhost:7008/callback</li>
+                            <li>例如: 访问 115.190.80.75:7008 → 回调 115.190.80.75:7008/callback</li>
+                        </ul>
                     </div>
                     
                     <div class="step">
@@ -345,14 +350,25 @@ app.get('/', (req, res) => {
             let currentMode = 'local';
             let usedCallbackUrl = '';
             
-            function startOAuthFlow(mode = 'local') {
-                currentMode = mode;
+            function startOAuthFlow() {
+                // 始终使用线上认证中心
+                const serverUrl = 'http://115.190.80.75:7009';  // 线上认证中心
                 
-                // 根据模式设置服务器地址和回调地址
-                const serverUrl = mode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
-                const callbackUrl = mode === 'online' ? 'http://115.190.80.75:7008/callback' : 'http://localhost:7008/callback';
+                // 智能检测回调地址：根据当前访问地址自动构建回调URL
+                const currentProtocol = window.location.protocol; // http: 或 https:
+                const currentHostname = window.location.hostname; // 域名或IP
+                const currentPort = window.location.port;         // 端口号
                 
-                // 记录使用的回调地址
+                // 构建回调地址，保持与当前访问地址一致
+                let callbackUrl;
+                if (currentPort && currentPort !== '80' && currentPort !== '443') {
+                    callbackUrl = currentProtocol + '//' + currentHostname + ':' + currentPort + '/callback';
+                } else {
+                    callbackUrl = currentProtocol + '//' + currentHostname + '/callback';
+                }
+                
+                // 设置模式和记录回调地址
+                currentMode = currentHostname === '115.190.80.75' ? 'online' : 'local';
                 usedCallbackUrl = callbackUrl;
                 
                 const authUrl = serverUrl + '/cas/oauth2.0/authorize?' + new URLSearchParams({
@@ -362,6 +378,12 @@ app.get('/', (req, res) => {
                     scope: 'read:user,user:email',
                     state: 'demo_' + Date.now()
                 });
+                
+                console.log('OAuth2流程开始:');
+                console.log('认证中心:', serverUrl);
+                console.log('当前访问地址:', window.location.href);
+                console.log('自动构建回调:', callbackUrl);
+                
                 window.open(authUrl, '_blank');
             }
 
@@ -375,9 +397,22 @@ app.get('/', (req, res) => {
                     return;
                 }
 
-                // 根据当前模式选择服务器地址，但回调地址必须与获取授权码时一致
-                const serverUrl = currentMode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
-                const callbackUrl = usedCallbackUrl || (currentMode === 'online' ? 'http://115.190.80.75:7008/callback' : 'http://localhost:7008/callback');
+                // 始终使用线上认证中心，但回调地址必须与获取授权码时一致
+                const serverUrl = 'http://115.190.80.75:7009';  // 线上认证中心
+                
+                // 如果没有记录的回调地址，则重新构建
+                let callbackUrl = usedCallbackUrl;
+                if (!callbackUrl) {
+                    const currentProtocol = window.location.protocol;
+                    const currentHostname = window.location.hostname;
+                    const currentPort = window.location.port;
+                    
+                    if (currentPort && currentPort !== '80' && currentPort !== '443') {
+                        callbackUrl = currentProtocol + '//' + currentHostname + ':' + currentPort + '/callback';
+                    } else {
+                        callbackUrl = currentProtocol + '//' + currentHostname + '/callback';
+                    }
+                }
 
                 console.log('交换令牌 - 当前模式:', currentMode);
                 console.log('服务器地址:', serverUrl);
@@ -432,8 +467,8 @@ app.get('/', (req, res) => {
                     return;
                 }
 
-                // 根据当前模式选择服务器地址
-                const serverUrl = currentMode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
+                // 始终使用线上认证中心
+                const serverUrl = 'http://115.190.80.75:7009';  // 线上认证中心
 
                 try {
                     const response = await fetch(serverUrl + '/cas/oauth2.0/profile', {
@@ -466,19 +501,15 @@ app.get('/', (req, res) => {
                 const code = urlParams.get('code');
                 if (code) {
                     document.getElementById('authCode').value = code;
-                    // 根据当前域名判断模式并设置UI
+                    // 根据当前域名设置模式和回调地址
                     if (window.location.hostname === '115.190.80.75') {
                         currentMode = 'online';
                         usedCallbackUrl = 'http://115.190.80.75:7008/callback';
-                        // 设置在线模式的单选框
-                        document.querySelector('input[name="testMode"][value="online"]').checked = true;
                     } else {
                         currentMode = 'local';
                         usedCallbackUrl = 'http://localhost:7008/callback';
-                        // 设置本地模式的单选框
-                        document.querySelector('input[name="testMode"][value="local"]').checked = true;
                     }
-                    alert('已自动填入授权码: ' + code + ' (模式: ' + (currentMode === 'online' ? '在线环境' : '本地开发') + ')');
+                    alert('已自动填入授权码: ' + code + ' (认证中心: 115.190.80.75:7009, 回调: ' + usedCallbackUrl + ')');
                 }
             }
             
@@ -486,10 +517,8 @@ app.get('/', (req, res) => {
             window.addEventListener('DOMContentLoaded', function() {
                 if (window.location.hostname === '115.190.80.75') {
                     currentMode = 'online';
-                    document.querySelector('input[name="testMode"][value="online"]').checked = true;
                 } else {
                     currentMode = 'local';
-                    document.querySelector('input[name="testMode"][value="local"]').checked = true;
                 }
             });
         </script>
