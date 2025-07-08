@@ -168,12 +168,34 @@ app.get('/', (req, res) => {
                 <!-- 快速测试 -->
                 <div class="section">
                     <h2>快速测试</h2>
-                    <a href="#" class="btn" onclick="startOAuthFlow()">开始OAuth2授权流程</a>
+                    <div style="margin-bottom: 15px;">
+                        <button class="btn" onclick="startOAuthFlow('local')" style="margin-right: 10px;">
+                            本地开发测试 (localhost回调)
+                        </button>
+                        <button class="btn" onclick="startOAuthFlow('online')" style="background: #28a745;">
+                            在线环境测试 (公网回调)
+                        </button>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 10px; font-size: 14px; color: #666; border-left: 4px solid #007bff;">
+                        <strong>选择说明:</strong><br>
+                        • <strong>本地开发测试:</strong> 回调到localhost:7008，适合本地调试<br>
+                        • <strong>在线环境测试:</strong> 回调到115.190.80.75:7008，适合在线演示
+                    </div>
                 </div>
 
                 <!-- 手动测试步骤 -->
                 <div class="section">
                     <h2>手动测试步骤</h2>
+                    
+                    <div style="background: #f8f9fa; padding: 12px; margin-bottom: 15px; border-left: 4px solid #007bff;">
+                        <strong>测试模式:</strong>
+                        <label style="display: inline-block; margin-left: 20px; margin-right: 20px;">
+                            <input type="radio" name="testMode" value="local" checked onclick="currentMode='local'"> 本地开发 (localhost)
+                        </label>
+                        <label style="display: inline-block;">
+                            <input type="radio" name="testMode" value="online" onclick="currentMode='online'"> 在线环境 (115.190.80.75)
+                        </label>
+                    </div>
                     
                     <div class="step">
                         <span class="step-number">1</span>
@@ -319,10 +341,19 @@ app.get('/', (req, res) => {
         </div>
 
         <script>
-            function startOAuthFlow() {
-                const authUrl = 'http://localhost:7009/cas/oauth2.0/authorize?' + new URLSearchParams({
+            // 当前测试模式
+            let currentMode = 'local';
+            
+            function startOAuthFlow(mode = 'local') {
+                currentMode = mode;
+                
+                // 根据模式设置服务器地址和回调地址
+                const serverUrl = mode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
+                const callbackUrl = mode === 'online' ? 'http://115.190.80.75:7008/callback' : 'http://localhost:7008/callback';
+                
+                const authUrl = serverUrl + '/cas/oauth2.0/authorize?' + new URLSearchParams({
                     client_id: 'localOAuth2',
-                    redirect_uri: 'http://localhost:7008/callback',
+                    redirect_uri: callbackUrl,
                     response_type: 'code',
                     scope: 'read:user,user:email',
                     state: 'demo_' + Date.now()
@@ -340,8 +371,12 @@ app.get('/', (req, res) => {
                     return;
                 }
 
+                // 根据当前模式选择服务器地址
+                const serverUrl = currentMode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
+                const callbackUrl = currentMode === 'online' ? 'http://115.190.80.75:7008/callback' : 'http://localhost:7008/callback';
+
                 try {
-                    const response = await fetch('http://localhost:7009/cas/oauth2.0/accessToken', {
+                    const response = await fetch(serverUrl + '/cas/oauth2.0/accessToken', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -349,7 +384,7 @@ app.get('/', (req, res) => {
                         body: new URLSearchParams({
                             grant_type: 'authorization_code',
                             code: authCode,
-                            redirect_uri: 'http://localhost:7008/callback',
+                            redirect_uri: callbackUrl,
                             client_id: 'localOAuth2',
                             client_secret: 'localOAuth2ACB'
                         })
@@ -388,8 +423,11 @@ app.get('/', (req, res) => {
                     return;
                 }
 
+                // 根据当前模式选择服务器地址
+                const serverUrl = currentMode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
+
                 try {
-                    const response = await fetch('http://localhost:7009/cas/oauth2.0/profile', {
+                    const response = await fetch(serverUrl + '/cas/oauth2.0/profile', {
                         headers: {
                             'Authorization': 'Bearer ' + accessToken
                         }
@@ -419,6 +457,10 @@ app.get('/', (req, res) => {
                 const code = urlParams.get('code');
                 if (code) {
                     document.getElementById('authCode').value = code;
+                    // 根据当前域名判断模式
+                    if (window.location.hostname === '115.190.80.75') {
+                        currentMode = 'online';
+                    }
                     alert('已自动填入授权码: ' + code);
                 }
             }
