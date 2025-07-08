@@ -144,11 +144,11 @@ app.get('/', (req, res) => {
                     <div class="config-box">
                         <div class="config-item">
                             <span class="config-label">OAuth2 API服务:</span>
-                            <span class="config-value">http://localhost:7009</span>
+                            <span class="config-value">http://115.190.80.75:7009 (公网) / http://localhost:7009 (本地)</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">演示页面:</span>
-                            <span class="config-value">http://localhost:7008</span>
+                            <span class="config-value">http://115.190.80.75:7008 (公网) / http://localhost:7008 (本地)</span>
                         </div>
                         <div class="config-item">
                             <span class="config-label">Client ID:</span>
@@ -159,11 +159,12 @@ app.get('/', (req, res) => {
                             <span class="config-value">localOAuth2ACB</span>
                         </div>
                         <div class="config-item">
-                            <span class="config-label">回调地址:</span>
-                            <span class="config-value">http://localhost:18099/login/oauth2/code/github</span>
+                            <span class="config-label">支持的回调地址:</span>
+                            <span class="config-value">localhost:* 和 115.190.80.75:*</span>
                         </div>
                     </div>
                 </div>
+
                 <!-- 快速测试 -->
                 <div class="section">
                     <h2>快速测试</h2>
@@ -179,8 +180,8 @@ app.get('/', (req, res) => {
                         <strong>获取授权码</strong>
                         <p>点击授权链接，使用测试账号登录：</p>
                         <ul style="margin: 10px 0 10px 30px;">
-                            <li>账号1: <code>TEST_USER</code> / <code>JYc1g3e5BccjxPr</code></li>
-                            <li>账号2: <code>TESTUSER</code> / <code>Icarus1432</code></li>
+                            <li>账号1: <code>213001001</code> / <code>JYc1g3e5BccjxPr</code></li>
+                            <li>账号2: <code>213001002</code> / <code>Icarus1432</code></li>
                         </ul>
                     </div>
 
@@ -213,21 +214,106 @@ app.get('/', (req, res) => {
                     </div>
                 </div>
 
+                <!-- 在线体验与开发调试说明 -->
+                <div class="section">
+                    <h2>在线体验 & 开发调试指南</h2>
+                    <div class="config-box">
+                        <h3>两种使用模式</h3>
+                        <p><strong>1. 在线体验模式</strong> - 直接访问公网地址进行OAuth2流程测试</p>
+                        <p><strong>2. 开发调试模式</strong> - 本地开发时重定向到localhost进行调试</p>
+                        
+                        <h3>配置说明</h3>
+                        <p>系统已配置支持<strong>双重回调地址</strong>，无需修改代码即可同时支持：</p>
+                        <ul style="margin: 10px 0 10px 20px;">
+                            <li><code>http://localhost:18099/login/oauth2/code/github</code> - 本地Spring Boot应用</li>
+                            <li><code>http://localhost:7008/callback</code> - 本地演示页面</li>
+                            <li><code>http://115.190.80.75:18099/login/oauth2/code/github</code> - 公网Spring Boot应用</li>
+                            <li><code>http://115.190.80.75:7008/callback</code> - 公网演示页面</li>
+                        </ul>
+
+                        <h3>开发者接入步骤</h3>
+                        <p><strong>Step 1:</strong> 将你的OAuth2端点替换为：</p>
+                        <div style="background: #f4f4f4; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 14px;">
+                        认证端点: http://115.190.80.75:7009/cas/oauth2.0/authorize<br>
+                        令牌端点: http://115.190.80.75:7009/cas/oauth2.0/accessToken<br>
+                        用户信息: http://115.190.80.75:7009/cas/oauth2.0/profile
+                        </div>
+
+                        <p><strong>Step 2:</strong> 配置OAuth2客户端参数：</p>
+                        <div style="background: #f4f4f4; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 14px;">
+                        client_id: localOAuth2<br>
+                        client_secret: localOAuth2ACB<br>
+                        redirect_uri: 你的应用回调地址 (支持localhost和115.190.80.75)
+                        </div>
+
+                        <p><strong>Step 3:</strong> 测试流程</p>
+                        <ul style="margin: 10px 0 10px 20px;">
+                            <li><strong>在线测试:</strong> 直接使用公网地址，适合演示和初步验证</li>
+                            <li><strong>本地调试:</strong> 设置回调地址为localhost，便于断点调试</li>
+                            <li><strong>移动端测试:</strong> 使用公网地址，手机可直接访问</li>
+                        </ul>
+
+                        <h3>快速体验</h3>
+                        <p>点击上方"开始OAuth2授权流程"按钮，系统会：</p>
+                        <ol style="margin: 10px 0 10px 20px;">
+                            <li>跳转到统一身份认证页面</li>
+                            <li>使用测试账号快速登录 (点击账号卡片自动填充)</li>
+                            <li>获取授权码并展示完整的令牌交换过程</li>
+                            <li>返回用户信息，验证集成效果</li>
+                        </ol>
+
+                        <div style="background: #e8f5e8; padding: 10px; margin: 10px 0; border-left: 4px solid #4caf50;">
+                            <strong>提示:</strong> 按东南大学统一身份认证接口的apitest那个域名仿的
+                        </div>
+                    </div>
+                </div>
+
                 <!-- API文档 -->
                 <div class="section">
                     <h2>API文档</h2>
                     <div class="config-box">
-                        <h3>授权端点</h3>
-                        <p><strong>GET</strong> <code>http://localhost:7009/cas/oauth2.0/authorize</code></p>
-                        <p>参数: client_id, redirect_uri, response_type=code, scope, state</p>
+                        <h3>1. 授权端点 (Authorization Endpoint)</h3>
+                        <p><strong>GET</strong> <code>http://115.190.80.75:7009/cas/oauth2.0/authorize</code></p>
+                        <p><strong>参数:</strong> client_id, redirect_uri, response_type=code, scope, state</p>
+                        <p><strong>示例:</strong></p>
+                        <div style="background: #f4f4f4; padding: 10px; margin: 5px 0; font-family: monospace; font-size: 12px; word-break: break-all;">
+                        http://115.190.80.75:7009/cas/oauth2.0/authorize?client_id=localOAuth2&redirect_uri=http://localhost:7008/callback&response_type=code&scope=read:user,user:email&state=demo123
+                        </div>
                         
-                        <h3 style="margin-top: 20px;">令牌端点</h3>
-                        <p><strong>POST</strong> <code>http://localhost:7009/cas/oauth2.0/accessToken</code></p>
-                        <p>参数: grant_type=authorization_code, code, redirect_uri, client_id, client_secret</p>
+                        <h3>2. 令牌端点 (Token Endpoint)</h3>
+                        <p><strong>POST</strong> <code>http://115.190.80.75:7009/cas/oauth2.0/accessToken</code></p>
+                        <p><strong>Content-Type:</strong> application/x-www-form-urlencoded</p>
+                        <p><strong>参数:</strong> grant_type=authorization_code, code, redirect_uri, client_id, client_secret</p>
+                        <p><strong>响应示例:</strong></p>
+                        <div style="background: #f4f4f4; padding: 10px; margin: 5px 0; font-family: monospace; font-size: 12px;">
+{<br>
+&nbsp;&nbsp;"access_token": "AT-7-xxx...",<br>
+&nbsp;&nbsp;"token_type": "bearer",<br>
+&nbsp;&nbsp;"expires_in": 28800,<br>
+&nbsp;&nbsp;"scope": "read:user,user:email"<br>
+}
+                        </div>
                         
-                        <h3 style="margin-top: 20px;">用户信息端点</h3>
-                        <p><strong>GET</strong> <code>http://localhost:7009/cas/oauth2.0/profile</code></p>
-                        <p>Headers: Authorization: Bearer {access_token}</p>
+                        <h3>3. 用户信息端点 (Profile Endpoint)</h3>
+                        <p><strong>GET</strong> <code>http://115.190.80.75:7009/cas/oauth2.0/profile</code></p>
+                        <p><strong>Headers:</strong> Authorization: Bearer {access_token}</p>
+                        <p><strong>响应示例:</strong></p>
+                        <div style="background: #f4f4f4; padding: 10px; margin: 5px 0; font-family: monospace; font-size: 12px;">
+{<br>
+&nbsp;&nbsp;"oauthClientId": "localOAuth2",<br>
+&nbsp;&nbsp;"service": "http://localhost:7008/callback",<br>
+&nbsp;&nbsp;"id": "213001001",<br>
+&nbsp;&nbsp;"client_id": "localOAuth2"<br>
+}
+                        </div>
+
+                        <h3>4. 登出端点 (Logout Endpoint)</h3>
+                        <p><strong>GET</strong> <code>http://115.190.80.75:7009/dist/logOut?redirectUrl=http://yourapp.com</code></p>
+                        <p><strong>参数:</strong> redirectUrl (可选，登出后重定向地址)</p>
+
+                        <div style="background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107;">
+                            <strong>测试账号:</strong> 所有端点都可以用本页面提供的测试账号进行验证 (213001001, 213001002, 213001003, 800000001)
+                        </div>
                     </div>
                 </div>
         </div>

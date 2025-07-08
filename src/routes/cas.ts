@@ -68,17 +68,22 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             </div>
             <div class="test-info">
                 <strong>测试环境</strong><br>
-                <div style="margin-top: 10px; display: flex; gap: 10px;">
-                    <button type="button" onclick="fillTestAccount1()" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">
-                        填入账号1
+                <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button type="button" onclick="fillAccount('213001001', 'JYc1g3e5BccjxPr')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        213001001
                     </button>
-                    <button type="button" onclick="fillTestAccount2()" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">
-                        填入账号2
+                    <button type="button" onclick="fillAccount('213001002', 'Icarus1432')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        213001002
+                    </button>
+                    <button type="button" onclick="fillAccount('213001003', 'DevTest2024')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        213001003
+                    </button>
+                    <button type="button" onclick="fillAccount('800000001', 'AdminPass123')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        800000001
                     </button>
                 </div>
-                <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                    账号1: TEST_USER / JYc1g3e5BccjxPr<br>
-                    账号2: TESTUSER / Icarus1432
+                <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                    点击上方按钮快速填入测试账号
                 </div>
             </div>
             <form method="post" action="/cas/oauth2.0/authorize">
@@ -103,14 +108,9 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
         </div>
         
         <script>
-            function fillTestAccount1() {
-                document.querySelector('input[name="username"]').value = 'TEST_USER';
-                document.querySelector('input[name="password"]').value = 'JYc1g3e5BccjxPr';
-            }
-            
-            function fillTestAccount2() {
-                document.querySelector('input[name="username"]').value = 'TESTUSER';
-                document.querySelector('input[name="password"]').value = 'Icarus1432';
+            function fillAccount(username, password) {
+                document.querySelector('input[name="username"]').value = username;
+                document.querySelector('input[name="password"]').value = password;
             }
         </script>
     </body>
@@ -129,7 +129,7 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
     const files = fs.readdirSync(dataPath);
     for (const file of files) {
         const clientData = JSON.parse(fs.readFileSync(path.join(dataPath, file), 'utf-8'));
-        const user = clientData.users.find((u: User) => u.username === username && u.password === password);
+        const user = clientData.users.find((u: User) => u.id === username && u.password === password);
         if (user) {
             return user;
         }
@@ -230,7 +230,7 @@ casRouter.get('/cas/oauth2.0/profile', (req: ExpressRequest, res: ExpressRespons
       res.json({
         oauthClientId: client?.id || 'localOAuth2',
         service: originalService,
-        id: user.username,
+        id: user.id,
         client_id: client?.id || 'localOAuth2'
       });
     })
@@ -395,17 +395,22 @@ casRouter.get('/dist/main/login', (req: ExpressRequest, res: ExpressResponse) =>
             
             <div class="test-info">
                 <strong>测试环境</strong><br>
-                <div style="margin-top: 10px; display: flex; gap: 10px;">
-                    <button type="button" onclick="fillTestAccount1()" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">
-                        填入账号1
+                <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button type="button" onclick="fillAccount('213001001', 'JYc1g3e5BccjxPr')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        213001001
                     </button>
-                    <button type="button" onclick="fillTestAccount2()" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">
-                        填入账号2
+                    <button type="button" onclick="fillAccount('213001002', 'Icarus1432')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        213001002
+                    </button>
+                    <button type="button" onclick="fillAccount('213001003', 'DevTest2024')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        213001003
+                    </button>
+                    <button type="button" onclick="fillAccount('800000001', 'AdminPass123')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        800000001
                     </button>
                 </div>
-                <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                    账号1: TEST_USER / JYc1g3e5BccjxPr<br>
-                    账号2: TESTUSER / Icarus1432
+                <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                    点击上方按钮快速填入测试账号
                 </div>
             </div>
             
@@ -427,14 +432,9 @@ casRouter.get('/dist/main/login', (req: ExpressRequest, res: ExpressResponse) =>
         </div>
         
         <script>
-            function fillTestAccount1() {
-                document.querySelector('input[name="username"]').value = 'TEST_USER';
-                document.querySelector('input[name="password"]').value = 'JYc1g3e5BccjxPr';
-            }
-            
-            function fillTestAccount2() {
-                document.querySelector('input[name="username"]').value = 'TESTUSER';
-                document.querySelector('input[name="password"]').value = 'Icarus1432';
+            function fillAccount(username, password) {
+                document.querySelector('input[name="username"]').value = username;
+                document.querySelector('input[name="password"]').value = password;
             }
         </script>
     </body>
@@ -452,7 +452,7 @@ casRouter.post('/cas/oauth2.0/login', async (req: ExpressRequest, res: ExpressRe
   
   for (const file of files) {
     const clientData = JSON.parse(fs.readFileSync(path.join(dataPath, file), 'utf-8'));
-    user = clientData.users.find((u: User) => u.username === username && u.password === password);
+    user = clientData.users.find((u: User) => u.id === username && u.password === password);
     if (user) break;
   }
   
@@ -474,7 +474,7 @@ casRouter.post('/cas/oauth2.0/login', async (req: ExpressRequest, res: ExpressRe
     res.send(`
       <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
         <h1 style="color: #4caf50;">✅ 登录成功</h1>
-        <p>用户: ${user.realName || user.username}</p>
+        <p>用户: ${user.realName || user.id}</p>
         <p>邮箱: ${user.email}</p>
       </div>
     `);

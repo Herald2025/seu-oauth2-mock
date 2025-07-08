@@ -29,12 +29,10 @@ const PORT = process.env.PORT || 7009; // OAuth2 API端口
 app.listen(PORT, () => {
   console.log(`🚀 东南大学OAuth2测试系统启动成功！`);
   console.log(`📍 OAuth2 API服务: http://localhost:${PORT}/`);
-  console.log(`📍 演示页面: http://localhost:7008/ (请单独启动)`);
   console.log(`\n🔗 CAS OAuth2端点:`);
   console.log(`  认证: http://localhost:${PORT}/cas/oauth2.0/authorize`);
   console.log(`  令牌: http://localhost:${PORT}/cas/oauth2.0/accessToken`);
   console.log(`  用户信息: http://localhost:${PORT}/cas/oauth2.0/profile`);
   console.log(`  登出: http://localhost:${PORT}/dist/logOut`);
-  console.log(`\n🧪 测试账号: TEST_USER / JYc1g3e5BccjxPr`);
   console.log(`\n🌐 CORS已启用，支持跨域访问`);
 });

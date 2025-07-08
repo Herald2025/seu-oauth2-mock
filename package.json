@@ -8,8 +8,6 @@
     "dev": "concurrently \"npm run auth-server\" \"npm run demo-frontend\" --names \"AUTH,DEMO\" --prefix-colors \"blue,green\"",
     "auth-server": "tsx apps/auth-server/index.ts",
     "demo-frontend": "tsx apps/demo-frontend/index.ts",
-    "api": "tsx src/index.ts",
-    "demo": "node demo-server.js",
     "build": "rolldown -c",
     "preview": "node dist/main.js",
     "type-check": "tsc --noEmit"

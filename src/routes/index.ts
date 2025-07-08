@@ -56,7 +56,7 @@ router.post('/authorize', async (req: ExpressRequest, res: ExpressResponse) => {
     const files = fs.readdirSync(dataPath);
     for (const file of files) {
         const clientData = JSON.parse(fs.readFileSync(path.join(dataPath, file), 'utf-8'));
-        const user = clientData.users.find((u: User) => u.username === username && u.password === password);
+        const user = clientData.users.find((u: User) => u.id === username && u.password === password);
         if (user) {
             return user;
         }
