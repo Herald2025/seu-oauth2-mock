@@ -1,8 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import routes from './routes/index.js';
-import casRoutes from './routes/cas.js';
+import routes from '../../src/routes/index.js';
+import casRoutes from '../../src/routes/cas.js';
 
 const app = express();
 

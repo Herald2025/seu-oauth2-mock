@@ -2,6 +2,11 @@ export interface User {
   id: string;
   username: string;
   password?: string;
+  email?: string;
+  cardId?: string;
+  realName?: string;
+  department?: string;
+  userType?: string;
 }
 
 export interface Client {

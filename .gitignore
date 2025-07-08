@@ -129,3 +129,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+.claude
+seu-oauth-test.js

@@ -16,6 +16,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dataPath = process.env.DATA_PATH || path.join(process.cwd(), 'data');
 
+// SEU兼容的令牌生成工具
+function generateRandomString(length: number): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+function generateSEUAuthorizationCode(): string {
+  const version = '12'; // 固定版本号，匹配SEU系统
+  const randomString = generateRandomString(32); // 32字符随机串
+  return `OC-${version}-${randomString}`;
+}
+
+function generateSEUAccessToken(): string {
+  const version = '7'; // 固定版本号，匹配SEU系统
+  const randomString = generateRandomString(32); // 32字符随机串
+  return `AT-${version}-${randomString}`;
+}
+
 // In-memory storage for codes and tokens
 const authorizationCodes: AppAuthorizationCode[] = [];
 const tokens: AppToken[] = [];
@@ -32,19 +54,29 @@ const getClient = async (clientId: string): Promise<AppClient | undefined> => {
 const model: AuthorizationCodeModel & RefreshTokenModel = {
   getClient: async (clientId: string, clientSecret: string | null): Promise<Client | undefined> => {
     const client = await getClient(clientId);
-    if (client && client.clientSecret === clientSecret) {
-      return {
-        id: client.id,
-        grants: client.grants,
-        redirectUris: client.redirectUris,
-      };
+    
+    // 调试日志
+    console.log(`[OAuth] 客户端验证: ID=${clientId}, Secret=${clientSecret ? '***' : 'null'}`);
+    console.log(`[OAuth] 找到客户端:`, client ? `ID=${client.id}, Secret=${client.clientSecret ? '***' : 'null'}` : 'null');
+    
+    if (client) {
+      // 对于授权端点，clientSecret可能为null
+      if (clientSecret === null || client.clientSecret === clientSecret) {
+        return {
+          id: client.id,
+          grants: client.grants,
+          redirectUris: client.redirectUris,
+        };
+      }
     }
     return undefined;
   },
 
   saveAuthorizationCode: async (code: AuthorizationCode, client: Client, user: User): Promise<AuthorizationCode> => {
+    // 使用SEU格式的授权码
+    const seuAuthCode = generateSEUAuthorizationCode();
     const authCode: AppAuthorizationCode = {
-      authorizationCode: code.authorizationCode,
+      authorizationCode: seuAuthCode,
       expiresAt: code.expiresAt,
       redirectUri: code.redirectUri as string,
       scope: code.scope || [],
@@ -73,8 +105,12 @@ const model: AuthorizationCodeModel & RefreshTokenModel = {
   },
 
   saveToken: async (token: Token, client: Client, user: User): Promise<Token> => {
+    // 使用SEU格式的访问令牌
+    const seuAccessToken = generateSEUAccessToken();
     const newToken: AppToken = {
       ...token,
+      accessToken: seuAccessToken,
+      accessTokenExpiresAt: new Date(Date.now() + 28800000), // 8小时有效期
       client: client as AppClient,
       user: user as AppUser,
     };
