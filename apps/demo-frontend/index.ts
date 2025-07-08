@@ -190,10 +190,10 @@ app.get('/', (req, res) => {
                     <div style="background: #f8f9fa; padding: 12px; margin-bottom: 15px; border-left: 4px solid #007bff;">
                         <strong>测试模式:</strong>
                         <label style="display: inline-block; margin-left: 20px; margin-right: 20px;">
-                            <input type="radio" name="testMode" value="local" checked onclick="currentMode='local'"> 本地开发 (localhost)
+                            <input type="radio" name="testMode" value="local" checked onchange="currentMode='local'"> 本地开发 (localhost)
                         </label>
                         <label style="display: inline-block;">
-                            <input type="radio" name="testMode" value="online" onclick="currentMode='online'"> 在线环境 (115.190.80.75)
+                            <input type="radio" name="testMode" value="online" onchange="currentMode='online'"> 在线环境 (115.190.80.75)
                         </label>
                     </div>
                     
@@ -341,8 +341,9 @@ app.get('/', (req, res) => {
         </div>
 
         <script>
-            // 当前测试模式
+            // 当前测试模式和使用的回调地址
             let currentMode = 'local';
+            let usedCallbackUrl = '';
             
             function startOAuthFlow(mode = 'local') {
                 currentMode = mode;
@@ -350,6 +351,9 @@ app.get('/', (req, res) => {
                 // 根据模式设置服务器地址和回调地址
                 const serverUrl = mode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
                 const callbackUrl = mode === 'online' ? 'http://115.190.80.75:7008/callback' : 'http://localhost:7008/callback';
+                
+                // 记录使用的回调地址
+                usedCallbackUrl = callbackUrl;
                 
                 const authUrl = serverUrl + '/cas/oauth2.0/authorize?' + new URLSearchParams({
                     client_id: 'localOAuth2',
@@ -371,9 +375,13 @@ app.get('/', (req, res) => {
                     return;
                 }
 
-                // 根据当前模式选择服务器地址
+                // 根据当前模式选择服务器地址，但回调地址必须与获取授权码时一致
                 const serverUrl = currentMode === 'online' ? 'http://115.190.80.75:7009' : 'http://localhost:7009';
-                const callbackUrl = currentMode === 'online' ? 'http://115.190.80.75:7008/callback' : 'http://localhost:7008/callback';
+                const callbackUrl = usedCallbackUrl || (currentMode === 'online' ? 'http://115.190.80.75:7008/callback' : 'http://localhost:7008/callback');
+
+                console.log('交换令牌 - 当前模式:', currentMode);
+                console.log('服务器地址:', serverUrl);
+                console.log('回调地址:', callbackUrl);
 
                 try {
                     const response = await fetch(serverUrl + '/cas/oauth2.0/accessToken', {
@@ -407,7 +415,8 @@ app.get('/', (req, res) => {
                         resultDiv.style.display = 'none';
                     }
                 } catch (error) {
-                    errorDiv.textContent = '请求失败: ' + error.message;
+                    console.error('请求失败:', error);
+                    errorDiv.textContent = '请求失败: ' + error.message + ' (模式: ' + currentMode + ', 服务器: ' + serverUrl + ')';
                     errorDiv.style.display = 'block';
                     resultDiv.style.display = 'none';
                 }
@@ -457,13 +466,32 @@ app.get('/', (req, res) => {
                 const code = urlParams.get('code');
                 if (code) {
                     document.getElementById('authCode').value = code;
-                    // 根据当前域名判断模式
+                    // 根据当前域名判断模式并设置UI
                     if (window.location.hostname === '115.190.80.75') {
                         currentMode = 'online';
+                        usedCallbackUrl = 'http://115.190.80.75:7008/callback';
+                        // 设置在线模式的单选框
+                        document.querySelector('input[name="testMode"][value="online"]').checked = true;
+                    } else {
+                        currentMode = 'local';
+                        usedCallbackUrl = 'http://localhost:7008/callback';
+                        // 设置本地模式的单选框
+                        document.querySelector('input[name="testMode"][value="local"]').checked = true;
                     }
-                    alert('已自动填入授权码: ' + code);
+                    alert('已自动填入授权码: ' + code + ' (模式: ' + (currentMode === 'online' ? '在线环境' : '本地开发') + ')');
                 }
             }
+            
+            // 页面加载时根据域名自动设置模式
+            window.addEventListener('DOMContentLoaded', function() {
+                if (window.location.hostname === '115.190.80.75') {
+                    currentMode = 'online';
+                    document.querySelector('input[name="testMode"][value="online"]').checked = true;
+                } else {
+                    currentMode = 'local';
+                    document.querySelector('input[name="testMode"][value="local"]').checked = true;
+                }
+            });
         </script>
     </body>
     </html>
