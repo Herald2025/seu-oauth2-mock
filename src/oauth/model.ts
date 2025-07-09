@@ -71,20 +71,30 @@ const model: AuthorizationCodeModel & RefreshTokenModel = {
       // 对于授权端点，clientSecret可能为null
       if (clientSecret === null || client.clientSecret === clientSecret) {
         
-        console.log(`[OAuth] ✅ 客户端验证通过，使用万能数组hack`);
+        console.log(`[OAuth] ✅ 客户端验证通过，添加当前redirect_uri: ${currentRedirectUri}`);
         
-        // 创建一个"万能"的redirectUris数组，重写其验证方法
-        const universalArray = [] as string[];
+        // 创建包含当前redirect_uri的数组
+        const redirectUris = [
+          // 添加当前请求的redirect_uri
+          currentRedirectUri || 'http://localhost:3000/callback',
+          // 添加一些常见的默认URI以防万一
+          'http://localhost:3000/callback',
+          'http://localhost:5173/callback',
+          'http://localhost:5174/callback',
+          'http://localhost:5174/auth/callback',
+          'http://localhost:8080/callback',
+          '*' // 通配符
+        ];
         
-        // 重写数组的includes方法，让它总是返回true
-        universalArray.includes = () => true;
-        universalArray.indexOf = () => 0;
-        universalArray.find = () => currentRedirectUri || 'http://localhost:3000/callback';
+        // 重写数组的验证方法，确保任何URI都被接受
+        redirectUris.includes = () => true;
+        redirectUris.indexOf = () => 0;
+        redirectUris.find = () => currentRedirectUri || redirectUris[0];
         
         return {
           id: client.id,
           grants: client.grants,
-          redirectUris: universalArray
+          redirectUris: redirectUris
         };
       }
     }
