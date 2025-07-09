@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import oauth from '../oauth/oauth.js';
 import { User } from '../types/index.js';
+import { setCurrentRedirectUri } from '../oauth/model.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +44,9 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
     });
     return;
   }
+
+  // 设置当前的redirect_uri以便OAuth2验证时使用
+  setCurrentRedirectUri(redirect_uri as string);
   
   res.send(`
     <!DOCTYPE html>
@@ -120,6 +124,11 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
 
 // CAS OAuth2.0 Authorization POST Handler
 casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: ExpressResponse) => {
+  // 设置当前的redirect_uri以便OAuth2验证时使用
+  if (req.body.redirect_uri) {
+    setCurrentRedirectUri(req.body.redirect_uri);
+  }
+
   const request = new Request(req);
   const response = new Response(res);
 
@@ -165,6 +174,11 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
 
 // CAS OAuth2.0 Access Token Endpoint
 casRouter.post('/cas/oauth2.0/accessToken', (req: ExpressRequest, res: ExpressResponse) => {
+  // 设置当前的redirect_uri以便OAuth2验证时使用
+  if (req.body.redirect_uri) {
+    setCurrentRedirectUri(req.body.redirect_uri);
+  }
+
   const request = new Request(req);
   const response = new Response(res);
   
