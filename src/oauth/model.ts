@@ -62,10 +62,33 @@ const model: AuthorizationCodeModel & RefreshTokenModel = {
     if (client) {
       // 对于授权端点，clientSecret可能为null
       if (clientSecret === null || client.clientSecret === clientSecret) {
+        // 生成非常宽泛的redirectUris列表，覆盖常见的开发场景
+        const universalRedirectUris = [];
+        
+        // 添加原有的配置（如果存在的话）
+        if (client.redirectUris && client.redirectUris.length > 0) {
+          universalRedirectUris.push(...client.redirectUris);
+        }
+        
+        // 添加常见端口的各种路径组合
+        const ports = [3000, 3001, 3002, 3003, 3004, 3005, 4000, 5000, 5173, 5174, 5175, 7008, 8000, 8080, 8081, 9000, 9090];
+        const paths = ['/callback', '/auth/callback', '/oauth/callback', '/login', '/auth/login', '/oauth/login'];
+        const hosts = ['localhost', '127.0.0.1'];
+        
+        // 生成所有可能的组合
+        for (const host of hosts) {
+          for (const port of ports) {
+            for (const path of paths) {
+              universalRedirectUris.push(`http://${host}:${port}${path}`);
+              universalRedirectUris.push(`https://${host}:${port}${path}`);
+            }
+          }
+        }
+        
         return {
           id: client.id,
           grants: client.grants,
-          redirectUris: client.redirectUris,
+          redirectUris: [...new Set(universalRedirectUris)] // 去重
         };
       }
     }

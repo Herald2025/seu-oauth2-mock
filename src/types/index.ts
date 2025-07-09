@@ -14,7 +14,7 @@ export interface Client {
   id: string;
   clientSecret: string;
   grants: string[];
-  redirectUris: string[];
+  redirectUris?: string[]; // 改为可选，因为会在代码中动态生成
   users: User[];
 }
 

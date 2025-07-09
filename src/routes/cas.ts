@@ -222,8 +222,8 @@ casRouter.get('/cas/oauth2.0/profile', (req: ExpressRequest, res: ExpressRespons
       const user = token.user as User;
       const client = token.client;
       
-      // 获取原始service参数（从令牌上下文或客户端信息获取）
-      const originalService = client?.redirectUris?.[0] || 'http://localhost:18099/login/oauth2/code/github';
+      // 获取原始service参数（使用默认值，实际应用中可以从令牌上下文获取）
+      const originalService = 'http://localhost:18099/login/oauth2/code/github';
       
       // Return user info with complete user information
       res.setHeader('Content-Type', 'application/json;charset=UTF-8');
