@@ -6,6 +6,8 @@ export interface User {
   realName?: string;
   department?: string;
   userType?: string;
+  studentNumber?: string;
+  gender?: string;
 }
 
 export interface Client {

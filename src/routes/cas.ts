@@ -225,14 +225,20 @@ casRouter.get('/cas/oauth2.0/profile', (req: ExpressRequest, res: ExpressRespons
       // 获取原始service参数（从令牌上下文或客户端信息获取）
       const originalService = client?.redirectUris?.[0] || 'http://localhost:18099/login/oauth2/code/github';
       
-      // Return user info in SEU exact format (simplified structure)
+      // Return user info with complete user information
       res.setHeader('Content-Type', 'application/json;charset=UTF-8');
-      res.json({
-        oauthClientId: client?.id || 'localOAuth2',
-        service: originalService,
-        id: user.id,
-        client_id: client?.id || 'localOAuth2'
-      });
+              res.json({
+          oauthClientId: client?.id || 'localOAuth2',
+          service: originalService,
+          id: user.id,
+          client_id: client?.id || 'localOAuth2',
+          email: user.email,
+          realName: user.realName,
+          department: user.department,
+          userType: user.userType,
+          studentNumber: user.studentNumber,
+          gender: user.gender
+        });
     })
     .catch((_err: any) => {
       // Use SEU standard error format
