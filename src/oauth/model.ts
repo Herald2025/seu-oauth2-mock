@@ -58,6 +58,8 @@ let currentRedirectUri: string | null = null;
 export const setCurrentRedirectUri = (uri: string) => {
   currentRedirectUri = uri;
   console.log(`[OAuth] 设置当前redirect_uri: ${uri}`);
+  console.log(`[OAuth] redirect_uri长度: ${uri.length}`);
+  console.log(`[OAuth] redirect_uri前50字符: ${uri.substring(0, 50)}...`);
 };
 
 const model: AuthorizationCodeModel & RefreshTokenModel = {

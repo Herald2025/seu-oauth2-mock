@@ -36,6 +36,17 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
   // Show login page with CAS style
   const { client_id, redirect_uri, response_type } = req.query;
   
+  // ===== 添加详细调试日志 =====
+  console.log('=== CAS AUTHORIZE DEBUG ===');
+  console.log('原始请求URL:', req.url);
+  console.log('原始query对象:', req.query);
+  console.log('client_id:', client_id);
+  console.log('redirect_uri类型:', typeof redirect_uri);
+  console.log('redirect_uri长度:', redirect_uri ? (redirect_uri as string).length : 'undefined');
+  console.log('redirect_uri内容:', redirect_uri);
+  console.log('response_type:', response_type);
+  console.log('===========================');
+  
   // 验证必要参数
   if (!client_id || !redirect_uri || !response_type) {
     res.status(400).json({
@@ -47,6 +58,16 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
 
   // 设置当前的redirect_uri以便OAuth2验证时使用
   setCurrentRedirectUri(redirect_uri as string);
+  
+  // HTML转义函数
+  const escapeHtml = (unsafe: string): string => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
   
   res.send(`
     <!DOCTYPE html>
@@ -63,6 +84,7 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             button { width: 100%; padding: 12px; background-color: #1976d2; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
             button:hover { background-color: #1565c0; }
             .test-info { background-color: #e3f2fd; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
+            .debug-info { background-color: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 12px; word-break: break-all; }
         </style>
     </head>
     <body>
@@ -70,6 +92,14 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             <div class="logo">
                 <h2>（仿）东南大学统一身份认证</h2>
             </div>
+            
+            <!-- 调试信息显示 -->
+            <div class="debug-info">
+                <strong>调试信息:</strong><br>
+                redirect_uri: ${escapeHtml(redirect_uri as string)}<br>
+                长度: ${(redirect_uri as string).length}
+            </div>
+            
             <div class="test-info">
                 <strong>测试环境</strong><br>
                 <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -91,11 +121,11 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
                 </div>
             </div>
             <form method="post" action="/cas/oauth2.0/authorize">
-                <input type="hidden" name="client_id" value="${req.query.client_id}" />
-                <input type="hidden" name="redirect_uri" value="${req.query.redirect_uri}" />
-                <input type="hidden" name="response_type" value="${req.query.response_type}" />
-                <input type="hidden" name="scope" value="${req.query.scope}" />
-                <input type="hidden" name="state" value="${req.query.state}" />
+                <input type="hidden" name="client_id" value="${escapeHtml(req.query.client_id as string)}" />
+                <input type="hidden" name="redirect_uri" value="${escapeHtml(req.query.redirect_uri as string)}" />
+                <input type="hidden" name="response_type" value="${escapeHtml(req.query.response_type as string)}" />
+                <input type="hidden" name="scope" value="${escapeHtml((req.query.scope as string) || '')}" />
+                <input type="hidden" name="state" value="${escapeHtml((req.query.state as string) || '')}" />
                 
                 <div class="form-group">
                     <label>用户名:</label>
@@ -124,6 +154,14 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
 
 // CAS OAuth2.0 Authorization POST Handler
 casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: ExpressResponse) => {
+  // ===== 添加详细调试日志 =====
+  console.log('=== CAS AUTHORIZE POST DEBUG ===');
+  console.log('POST body:', req.body);
+  console.log('redirect_uri from body:', req.body.redirect_uri);
+  console.log('redirect_uri类型:', typeof req.body.redirect_uri);
+  console.log('redirect_uri长度:', req.body.redirect_uri ? req.body.redirect_uri.length : 'undefined');
+  console.log('================================');
+  
   // 设置当前的redirect_uri以便OAuth2验证时使用
   if (req.body.redirect_uri) {
     setCurrentRedirectUri(req.body.redirect_uri);
@@ -150,7 +188,17 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
     const user = await authenticate();
     if (!user) {
       // If authentication fails, redirect back with error
-      const errorUrl = `/cas/oauth2.0/authorize?${new URLSearchParams(req.body).toString()}&error=invalid_credentials`;
+      // 修复：避免二次编码问题，直接构建URL
+      const params = new URLSearchParams();
+      params.set('client_id', req.body.client_id || '');
+      params.set('redirect_uri', req.body.redirect_uri || '');
+      params.set('response_type', req.body.response_type || '');
+      params.set('scope', req.body.scope || '');
+      params.set('state', req.body.state || '');
+      params.set('error', 'invalid_credentials');
+      
+      const errorUrl = `/cas/oauth2.0/authorize?${params.toString()}`;
+      console.log('认证失败，重定向到:', errorUrl);
       res.redirect(errorUrl);
       return;
     }
@@ -161,10 +209,13 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
         }
     };
 
+    console.log('开始OAuth2授权流程...');
     const code = await oauth.authorize(request, response, options);
+    console.log('OAuth2授权成功，生成的code:', code);
     res.locals.oauth = { code: code };
     res.status(response.status || 302).set(response.headers).send();
   } catch (err: any) {
+    console.error('OAuth2授权错误:', err);
     res.status(err.code || 500).json({
       error: err.name || 'server_error',
       error_description: err.message || 'Internal server error'
