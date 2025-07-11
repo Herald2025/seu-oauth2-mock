@@ -5,7 +5,7 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import oauth from '../oauth/oauth.js';
-import { User } from '../types/index.js';
+import { User, Token as AppToken } from '../types/index.js';
 import { setCurrentRedirectUri } from '../oauth/model.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -287,14 +287,15 @@ casRouter.get('/cas/oauth2.0/profile', (req: ExpressRequest, res: ExpressRespons
       const user = token.user as User;
       const client = token.client;
       
-      // 获取原始service参数（使用默认值，实际应用中可以从令牌上下文获取）
-      const originalService = 'http://localhost:18099/login/oauth2/code/github';
+      // 获取原始service参数（现在从令牌中动态获取）
+      const tokenWithRedirect = token as AppToken;
+      const originalService = tokenWithRedirect.redirectUri;
       
       // Return user info with complete user information
       res.setHeader('Content-Type', 'application/json;charset=UTF-8');
               res.json({
           oauthClientId: client?.id || 'localOAuth2',
-          service: originalService,
+          service: originalService || '', // 返回令牌中存储的service/redirectUri
           id: user.id,
           client_id: client?.id || 'localOAuth2',
           email: user.email,

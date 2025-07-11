@@ -328,7 +328,7 @@ app.get('/', (req, res) => {
                         <div style="background: #f4f4f4; padding: 10px; margin: 5px 0; font-family: monospace; font-size: 12px;">
 {<br>
 &nbsp;&nbsp;"oauthClientId": "localOAuth2",<br>
-&nbsp;&nbsp;"service": "http://localhost:18099/login/oauth2/code/github", <span style="color: #d9534f;">// 注意: 后端当前硬编码此值</span><br>
+&nbsp;&nbsp;"service": "http://your-app.com/callback", <span style="color: #28a745;">// 动态返回授权时使用的redirect_uri</span><br>
 &nbsp;&nbsp;"id": "213001001",<br>
 &nbsp;&nbsp;"client_id": "localOAuth2",<br>
 &nbsp;&nbsp;"email": "user@example.com",<br>

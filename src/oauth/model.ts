@@ -144,6 +144,7 @@ const model: AuthorizationCodeModel & RefreshTokenModel = {
       accessTokenExpiresAt: new Date(Date.now() + 28800000), // 8小时有效期
       client: client as AppClient,
       user: user as AppUser,
+      redirectUri: currentRedirectUri || undefined, // 从全局变量获取并保存
     };
     tokens.push(newToken);
     return newToken;
