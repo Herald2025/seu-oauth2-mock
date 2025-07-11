@@ -26,6 +26,7 @@ export interface Token {
   scope?: string | string[];
   client: Client;
   user: User;
+  redirectUri?: string;
 }
 
 export interface AuthorizationCode {

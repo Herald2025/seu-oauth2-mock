@@ -324,13 +324,19 @@ app.get('/', (req, res) => {
                         <h3>3. 用户信息端点 (Profile Endpoint)</h3>
                         <p><strong>GET</strong> <code>http://115.190.80.75:7009/cas/oauth2.0/profile</code></p>
                         <p><strong>Headers:</strong> Authorization: Bearer {access_token}</p>
-                        <p><strong>响应示例:</strong></p>
+                        <p><strong>响应示例 (完整结构):</strong></p>
                         <div style="background: #f4f4f4; padding: 10px; margin: 5px 0; font-family: monospace; font-size: 12px;">
 {<br>
 &nbsp;&nbsp;"oauthClientId": "localOAuth2",<br>
-&nbsp;&nbsp;"service": "http://localhost:7008/callback",<br>
+&nbsp;&nbsp;"service": "http://localhost:18099/login/oauth2/code/github", <span style="color: #d9534f;">// 注意: 后端当前硬编码此值</span><br>
 &nbsp;&nbsp;"id": "213001001",<br>
-&nbsp;&nbsp;"client_id": "localOAuth2"<br>
+&nbsp;&nbsp;"client_id": "localOAuth2",<br>
+&nbsp;&nbsp;"email": "user@example.com",<br>
+&nbsp;&nbsp;"realName": "张三",<br>
+&nbsp;&nbsp;"department": "计算机科学与工程学院",<br>
+&nbsp;&nbsp;"userType": "本科生",<br>
+&nbsp;&nbsp;"studentNumber": "213001001",<br>
+&nbsp;&nbsp;"gender": "男"<br>
 }
                         </div>
 
