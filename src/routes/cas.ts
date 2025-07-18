@@ -83,8 +83,40 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
             button { width: 100%; padding: 12px; background-color: #1976d2; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
             button:hover { background-color: #1565c0; }
-            .test-info { background-color: #e3f2fd; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
+            .test-info { background-color: #e3f2fd; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
             .debug-info { background-color: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 12px; word-break: break-all; }
+            
+            /* 账号卡片样式 */
+            .account-card {
+                background: white;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                padding: 10px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .account-card:hover {
+                background: #f8f9fa;
+                border-color: #1976d2;
+                box-shadow: 0 2px 8px rgba(25,118,210,0.15);
+                transform: translateY(-1px);
+            }
+            .account-card:active {
+                transform: translateY(0);
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .account-main {
+                font-weight: bold;
+                color: #333;
+                font-size: 13px;
+                margin-bottom: 4px;
+            }
+            .account-detail {
+                color: #666;
+                font-size: 11px;
+                line-height: 1.3;
+            }
         </style>
     </head>
     <body>
@@ -101,23 +133,60 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             </div>
             
             <div class="test-info">
-                <strong>测试环境</strong><br>
-                <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <button type="button" onclick="fillAccount('213001001', 'JYc1g3e5BccjxPr')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        213001001
-                    </button>
-                    <button type="button" onclick="fillAccount('213001002', 'Icarus1432')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        213001002
-                    </button>
-                    <button type="button" onclick="fillAccount('213001003', 'DevTest2024')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        213001003
-                    </button>
-                    <button type="button" onclick="fillAccount('800000001', 'AdminPass123')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        800000001
-                    </button>
+                <strong>测试环境 - 一键登录</strong><br>
+                <div style="margin-top: 15px;">
+                    <!-- 学生账号 -->
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 14px;">👨‍🎓 学生账号</h4>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                            <div class="account-card" onclick="fillAccount('213001001', 'JYc1g3e5BccjxPr')">
+                                <div class="account-main">测试用户 (213001001)</div>
+                                <div class="account-detail">计算机科学与工程学院 | 学号: 71123305</div>
+                            </div>
+                            <div class="account-card" onclick="fillAccount('213001002', 'Icarus1432')">
+                                <div class="account-main">测试用户2 (213001002)</div>
+                                <div class="account-detail">信息科学与工程学院 | 学号: 71123306</div>
+                            </div>
+                            <div class="account-card" onclick="fillAccount('213001003', 'DevTest2024')">
+                                <div class="account-main">开发测试用户 (213001003)</div>
+                                <div class="account-detail">软件学院 | 学号: 71123307</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 教职工账号 -->
+                    <div>
+                        <h4 style="margin: 0 0 8px 0; color: #d32f2f; font-size: 14px;">👨‍🏫 教职工账号</h4>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                            <div class="account-card" onclick="fillAccount('800000001', 'AdminPass123')">
+                                <div class="account-main">系统管理员 (800000001)</div>
+                                <div class="account-detail">信息化处 | 管理员权限</div>
+                            </div>
+                            <div class="account-card" onclick="fillAccount('800001001', 'TeacherCS2024')">
+                                <div class="account-main">张明华 (800001001)</div>
+                                <div class="account-detail">计算机科学与工程学院 | 教师</div>
+                            </div>
+                            <div class="account-card" onclick="fillAccount('800001002', 'Prof_Li@2024')">
+                                <div class="account-main">李晓雨 (800001002)</div>
+                                <div class="account-detail">电子科学与工程学院 | 教师</div>
+                            </div>
+                            <div class="account-card" onclick="fillAccount('800001003', 'DrWang#123')">
+                                <div class="account-main">王建国 (800001003)</div>
+                                <div class="account-detail">机械工程学院 | 教师</div>
+                            </div>
+                            <div class="account-card" onclick="fillAccount('800001004', 'Chen_Prof99')">
+                                <div class="account-main">陈静芳 (800001004)</div>
+                                <div class="account-detail">经济管理学院 | 教师</div>
+                            </div>
+                            <div class="account-card" onclick="fillAccount('800001005', 'Arch_Liu2024')">
+                                <div class="account-main">刘志强 (800001005)</div>
+                                <div class="account-detail">建筑学院 | 教师</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-top: 10px; font-size: 11px; color: #666;">
-                    点击上方按钮快速填入测试账号
+                <div style="margin-top: 12px; font-size: 11px; color: #666; text-align: center;">
+                    💡 点击上方卡片快速填入测试账号密码
                 </div>
             </div>
             <form method="post" action="/cas/oauth2.0/authorize">
