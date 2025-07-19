@@ -345,7 +345,7 @@ app.get('/', (req, res) => {
                         <p><strong>参数:</strong> redirectUrl (可选，登出后重定向地址)</p>
 
                         <div style="background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107;">
-                            <strong>测试账号:</strong> 所有端点都可以用本页面提供的测试账号进行验证 (213001001, 213001002, 213001003, 800000001)
+                            <strong>测试账号:</strong> 所有端点都可以用本页面提供的测试账号进行验证 (213001001, 213001002, 213001003, 100000001)
                         </div>
                     </div>
                 </div>

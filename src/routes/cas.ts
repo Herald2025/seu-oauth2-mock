@@ -158,28 +158,28 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
                     <div>
                         <h4 style="margin: 0 0 8px 0; color: #d32f2f; font-size: 14px;">👨‍🏫 教职工账号</h4>
                         <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                            <div class="account-card" onclick="fillAccount('800000001', 'AdminPass123')">
-                                <div class="account-main">系统管理员 (800000001)</div>
+                            <div class="account-card" onclick="fillAccount('100000001', 'AdminPass123')">
+                                <div class="account-main">系统管理员 (100000001)</div>
                                 <div class="account-detail">信息化处 | 管理员权限</div>
                             </div>
-                            <div class="account-card" onclick="fillAccount('800001001', 'TeacherCS2024')">
-                                <div class="account-main">张明华 (800001001)</div>
+                            <div class="account-card" onclick="fillAccount('100001001', 'TeacherCS2024')">
+                                <div class="account-main">张明华 (100001001)</div>
                                 <div class="account-detail">计算机科学与工程学院 | 教师</div>
                             </div>
-                            <div class="account-card" onclick="fillAccount('800001002', 'Prof_Li@2024')">
-                                <div class="account-main">李晓雨 (800001002)</div>
+                            <div class="account-card" onclick="fillAccount('100001002', 'Prof_Li@2024')">
+                                <div class="account-main">李晓雨 (100001002)</div>
                                 <div class="account-detail">电子科学与工程学院 | 教师</div>
                             </div>
-                            <div class="account-card" onclick="fillAccount('800001003', 'DrWang#123')">
-                                <div class="account-main">王建国 (800001003)</div>
+                            <div class="account-card" onclick="fillAccount('100001003', 'DrWang#123')">
+                                <div class="account-main">王建国 (100001003)</div>
                                 <div class="account-detail">机械工程学院 | 教师</div>
                             </div>
-                            <div class="account-card" onclick="fillAccount('800001004', 'Chen_Prof99')">
-                                <div class="account-main">陈静芳 (800001004)</div>
+                            <div class="account-card" onclick="fillAccount('100001004', 'Chen_Prof99')">
+                                <div class="account-main">陈静芳 (100001004)</div>
                                 <div class="account-detail">经济管理学院 | 教师</div>
                             </div>
-                            <div class="account-card" onclick="fillAccount('800001005', 'Arch_Liu2024')">
-                                <div class="account-main">刘志强 (800001005)</div>
+                            <div class="account-card" onclick="fillAccount('100001005', 'Arch_Liu2024')">
+                                <div class="account-main">刘志强 (100001005)</div>
                                 <div class="account-detail">建筑学院 | 教师</div>
                             </div>
                         </div>
@@ -546,8 +546,8 @@ casRouter.get('/dist/main/login', (req: ExpressRequest, res: ExpressResponse) =>
                     <button type="button" onclick="fillAccount('213001003', 'DevTest2024')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
                         213001003
                     </button>
-                    <button type="button" onclick="fillAccount('800000001', 'AdminPass123')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        800000001
+                    <button type="button" onclick="fillAccount('100000001', 'AdminPass123')" style="background: #6c757d; color: white; border: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        100000001
                     </button>
                 </div>
                 <div style="margin-top: 10px; font-size: 11px; color: #666;">
