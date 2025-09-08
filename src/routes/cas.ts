@@ -69,6 +69,26 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
       .replace(/'/g, "&#039;");
   };
   
+  // 从本地JSON加载账号列表并生成账号卡片（不区分老师学生）
+  let accountCardsHtml = '';
+  try {
+    const localData = JSON.parse(
+      fs.readFileSync(path.join(dataPath, 'localOAuth2.json'), 'utf-8')
+    );
+    const users: User[] = Array.isArray(localData?.users) ? localData.users : [];
+    accountCardsHtml = users
+      .map((u) => `
+        <div class="account-card" onclick="fillAccount('${(u.id)}', '${(u.password)}')">
+          <div class="account-main">${escapeHtml(u.realName || u.id)} (${escapeHtml(u.id)})</div>
+          <div class="account-detail">${escapeHtml(u.department || '')}</div>
+        </div>
+      `)
+      .join('\n');
+  } catch (e) {
+    console.error('加载本地账号数据失败:', e);
+    accountCardsHtml = '<div style="color:#d32f2f;">加载本地账号数据失败</div>';
+  }
+
   res.send(`
     <!DOCTYPE html>
     <html>
@@ -134,59 +154,11 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             
             <div class="test-info">
                 <strong>测试环境 - 一键登录</strong><br>
-                <div style="margin-top: 15px;">
-                    <!-- 学生账号 -->
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="margin: 0 0 8px 0; color: #1976d2; font-size: 14px;">👨‍🎓 学生账号</h4>
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                            <div class="account-card" onclick="fillAccount('213001001', 'JYc1g3e5BccjxPr')">
-                                <div class="account-main">测试用户 (213001001)</div>
-                                <div class="account-detail">计算机科学与工程学院 | 学号: 71123305</div>
-                            </div>
-                            <div class="account-card" onclick="fillAccount('213001002', 'Icarus1432')">
-                                <div class="account-main">测试用户2 (213001002)</div>
-                                <div class="account-detail">信息科学与工程学院 | 学号: 71123306</div>
-                            </div>
-                            <div class="account-card" onclick="fillAccount('213001003', 'DevTest2024')">
-                                <div class="account-main">开发测试用户 (213001003)</div>
-                                <div class="account-detail">软件学院 | 学号: 71123307</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 教职工账号 -->
-                    <div>
-                        <h4 style="margin: 0 0 8px 0; color: #d32f2f; font-size: 14px;">👨‍🏫 教职工账号</h4>
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                            <div class="account-card" onclick="fillAccount('100000001', 'AdminPass123')">
-                                <div class="account-main">系统管理员 (100000001)</div>
-                                <div class="account-detail">信息化处 | 管理员权限</div>
-                            </div>
-                            <div class="account-card" onclick="fillAccount('100001001', 'TeacherCS2024')">
-                                <div class="account-main">张明华 (100001001)</div>
-                                <div class="account-detail">计算机科学与工程学院 | 教师</div>
-                            </div>
-                            <div class="account-card" onclick="fillAccount('100001002', 'Prof_Li@2024')">
-                                <div class="account-main">李晓雨 (100001002)</div>
-                                <div class="account-detail">电子科学与工程学院 | 教师</div>
-                            </div>
-                            <div class="account-card" onclick="fillAccount('100001003', 'DrWang#123')">
-                                <div class="account-main">王建国 (100001003)</div>
-                                <div class="account-detail">机械工程学院 | 教师</div>
-                            </div>
-                            <div class="account-card" onclick="fillAccount('100001004', 'Chen_Prof99')">
-                                <div class="account-main">陈静芳 (100001004)</div>
-                                <div class="account-detail">经济管理学院 | 教师</div>
-                            </div>
-                            <div class="account-card" onclick="fillAccount('100001005', 'Arch_Liu2024')">
-                                <div class="account-main">刘志强 (100001005)</div>
-                                <div class="account-detail">建筑学院 | 教师</div>
-                            </div>
-                        </div>
-                    </div>
+                <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 8px;">
+                  ${accountCardsHtml}
                 </div>
                 <div style="margin-top: 12px; font-size: 11px; color: #666; text-align: center;">
-                    💡 点击上方卡片快速填入测试账号密码
+                    💡 点击上方卡片快速填入测试账号密码（来自 localOAuth2.json）
                 </div>
             </div>
             <form method="post" action="/cas/oauth2.0/authorize">
