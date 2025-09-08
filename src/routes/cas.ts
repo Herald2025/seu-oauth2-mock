@@ -56,8 +56,27 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
     return;
   }
 
+  // 规范化redirect_uri：若为相对路径或本地默认，改为当前请求域名
+  const getProto = () => (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+  const getHost = () => (req.headers['x-forwarded-host'] as string) || req.get('host') || 'localhost';
+  const normalizeRedirectUri = (uri: string | string[] | undefined) => {
+    const raw = Array.isArray(uri) ? uri[0] : (uri || '');
+    try {
+      // 绝对URL直接使用
+      if (/^https?:\/\//i.test(raw)) return raw;
+      // 空或相对路径，使用当前域名拼接
+      const base = `${getProto()}://${getHost()}`;
+      if (!raw) return `${base}/callback`;
+      return new URL(raw, base).toString();
+    } catch {
+      // 兜底为当前域名/callback
+      return `${getProto()}://${getHost()}/callback`;
+    }
+  };
+
+  const normalizedRedirectUri = normalizeRedirectUri(redirect_uri as unknown as string | string[] | undefined);
   // 设置当前的redirect_uri以便OAuth2验证时使用
-  setCurrentRedirectUri(redirect_uri as string);
+  setCurrentRedirectUri(normalizedRedirectUri);
   
   // HTML转义函数
   const escapeHtml = (unsafe: string): string => {
@@ -149,7 +168,7 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             <div class="debug-info">
                 <strong>调试信息:</strong><br>
                 redirect_uri: ${escapeHtml(redirect_uri as string)}<br>
-                长度: ${(redirect_uri as string).length}
+                规范化: ${escapeHtml(normalizedRedirectUri)}
             </div>
             
             <div class="test-info">
@@ -163,7 +182,7 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
             </div>
             <form method="post" action="/cas/oauth2.0/authorize">
                 <input type="hidden" name="client_id" value="${escapeHtml(req.query.client_id as string)}" />
-                <input type="hidden" name="redirect_uri" value="${escapeHtml(req.query.redirect_uri as string)}" />
+                <input type="hidden" name="redirect_uri" value="${escapeHtml(normalizedRedirectUri)}" />
                 <input type="hidden" name="response_type" value="${escapeHtml(req.query.response_type as string)}" />
                 <input type="hidden" name="scope" value="${escapeHtml((req.query.scope as string) || '')}" />
                 <input type="hidden" name="state" value="${escapeHtml((req.query.state as string) || '')}" />
@@ -203,10 +222,21 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
   console.log('redirect_uri长度:', req.body.redirect_uri ? req.body.redirect_uri.length : 'undefined');
   console.log('================================');
   
-  // 设置当前的redirect_uri以便OAuth2验证时使用
-  if (req.body.redirect_uri) {
-    setCurrentRedirectUri(req.body.redirect_uri);
-  }
+  // 设置当前的redirect_uri以便OAuth2验证时使用（按请求域名规范化）
+  const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+  const host = (req.headers['x-forwarded-host'] as string) || req.get('host') || 'localhost';
+  const normalize = (uri: string | undefined) => {
+    const raw = uri || '';
+    try {
+      if (/^https?:\/\//i.test(raw)) return raw;
+      const base = `${proto}://${host}`;
+      if (!raw) return `${base}/callback`;
+      return new URL(raw, base).toString();
+    } catch {
+      return `${proto}://${host}/callback`;
+    }
+  };
+  setCurrentRedirectUri(normalize(req.body.redirect_uri));
 
   const request = new Request(req);
   const response = new Response(res);
