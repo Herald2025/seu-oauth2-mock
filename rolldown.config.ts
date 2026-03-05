@@ -1,24 +1,32 @@
 import { defineConfig } from 'rolldown';
+import { builtinModules } from 'node:module';
 
-export default defineConfig({
-  input: 'src/index.ts',
-  external: [
-    /^node:.*/,
-    'express',
-    'body-parser', 
-    'oauth2-server',
-    'fs',
-    'path',
-    'util',
-    'url',
-    'crypto',
-    'buffer',
-    'querystring',
-    'stream',
-    'string_decoder',
-  ],
-  output: {
-    file: 'dist/main.js',
-    minify: true
-  }
-});
+const nodeBuiltins = new Set([
+  ...builtinModules,
+  ...builtinModules.map((name) => `node:${name}`),
+]);
+
+const external = (id: string) => id.startsWith('node:') || nodeBuiltins.has(id);
+
+export default defineConfig([
+  {
+    input: 'apps/auth-server/index.ts',
+    platform: 'node',
+    external,
+    output: {
+      file: 'dist/auth-server.mjs',
+      format: 'esm',
+      codeSplitting: false,
+    },
+  },
+  {
+    input: 'apps/demo-frontend/index.ts',
+    platform: 'node',
+    external,
+    output: {
+      file: 'dist/demo-frontend.mjs',
+      format: 'esm',
+      codeSplitting: false,
+    },
+  },
+]);

@@ -9,7 +9,7 @@
     "auth-server": "tsx apps/auth-server/index.ts",
     "demo-frontend": "tsx apps/demo-frontend/index.ts",
     "build": "rolldown -c",
-    "preview": "node dist/main.js",
+    "preview": "node dist/auth-server.mjs",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],

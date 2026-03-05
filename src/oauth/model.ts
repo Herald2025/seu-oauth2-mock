@@ -7,14 +7,8 @@ import {
   RefreshTokenModel,
   RefreshToken
 } from 'oauth2-server';
-import { fileURLToPath } from 'url';
-import * as fs from 'fs';
-import * as path from 'path';
 import { Client as AppClient, User as AppUser, AuthorizationCode as AppAuthorizationCode, Token as AppToken } from '../types/index.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dataPath = process.env.DATA_PATH || path.join(process.cwd(), 'data');
+import localOAuth2 from '../data/localOAuth2.json' with { type: 'json' };
 
 // SEU兼容的令牌生成工具
 function generateRandomString(length: number): string {
@@ -42,13 +36,12 @@ function generateSEUAccessToken(): string {
 const authorizationCodes: AppAuthorizationCode[] = [];
 const tokens: AppToken[] = [];
 
+const clients: Record<string, AppClient> = {
+  [localOAuth2.id]: localOAuth2 as AppClient,
+};
+
 const getClient = async (clientId: string): Promise<AppClient | undefined> => {
-  const filePath = path.join(dataPath, `${clientId}.json`);
-  if (fs.existsSync(filePath)) {
-    const clientData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    return clientData as AppClient;
-  }
-  return undefined;
+  return clients[clientId];
 };
 
 // 全局变量来存储当前请求的redirect_uri
