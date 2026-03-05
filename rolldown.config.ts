@@ -17,6 +17,7 @@ export default defineConfig([
       file: 'dist/auth-server.mjs',
       format: 'esm',
       codeSplitting: false,
+      minify: true,
     },
   },
   {
@@ -27,6 +28,7 @@ export default defineConfig([
       file: 'dist/demo-frontend.mjs',
       format: 'esm',
       codeSplitting: false,
+      minify: true,
     },
   },
 ]);
