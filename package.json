@@ -12,6 +12,8 @@
     "build:bun:linux:auth-server": "bun build dist/auth-server.mjs --compile --target=bun-linux-x64 --outfile dist/auth-server",
     "build:bun:linux:demo-frontend": "bun build dist/demo-frontend.mjs --compile --target=bun-linux-x64 --outfile dist/demo-frontend",
     "build:bun:linux": "npm run build:bun:linux:auth-server && npm run build:bun:linux:demo-frontend",
+    "build:bun:linux:auth-server:prod": "bun build dist/auth-server.mjs --compile --target=bun-linux-x64 --outfile dist/auth-server --define process.env.BASE_PATH='\"/auth-server\"'",
+    "build:bun:linux:prod": "npm run build:bun:linux:auth-server:prod && npm run build:bun:linux:demo-frontend",
     "preview": "node dist/auth-server.mjs",
     "type-check": "tsc --noEmit"
   },

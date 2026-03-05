@@ -1,18 +1,75 @@
 import express, { Router, Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { Request, Response, Token } from 'oauth2-server';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import oauth from '../oauth/oauth.js';
 import { User, Token as AppToken } from '../types/index.js';
 import { setCurrentRedirectUri } from '../oauth/model.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dataPath = process.env.DATA_PATH || path.join(process.cwd(), 'data');
+import localOAuth2 from '../data/localOAuth2.json' with { type: 'json' };
 
 const casRouter = Router();
+const localUsers: User[] = Array.isArray(localOAuth2?.users) ? localOAuth2.users as User[] : [];
+
+const normalizePrefix = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === '/') return '';
+  const withLeading = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return withLeading.endsWith('/') ? withLeading.slice(0, -1) : withLeading;
+};
+
+const prefixFromPathEnding = (pathname: string, endpointPath: string): string => {
+  if (!pathname.endsWith(endpointPath)) return '';
+  return normalizePrefix(pathname.slice(0, pathname.length - endpointPath.length));
+};
+
+const prefixFromUrl = (urlValue: string, endpointPath: string): string => {
+  try {
+    const parsed = new URL(urlValue, 'http://localhost');
+    return prefixFromPathEnding(parsed.pathname, endpointPath);
+  } catch {
+    return '';
+  }
+};
+
+const getDeploymentPrefix = (req: ExpressRequest, endpointPath: string = req.path): string => {
+  const forwardedPrefix = req.get('x-forwarded-prefix');
+  if (forwardedPrefix) {
+    const first = forwardedPrefix.split(',')[0] || '';
+    return normalizePrefix(first);
+  }
+
+  const forwardedUri = req.get('x-forwarded-uri') || req.get('x-original-uri') || req.get('x-rewrite-url');
+  if (forwardedUri) {
+    const fromForwardedUri = prefixFromUrl(forwardedUri, endpointPath);
+    if (fromForwardedUri) return fromForwardedUri;
+  }
+
+  const referer = req.get('referer');
+  if (referer) {
+    const fromReferer = prefixFromUrl(referer, endpointPath);
+    if (fromReferer) return fromReferer;
+  }
+
+  const configuredBasePath = process.env.BASE_PATH || process.env.PUBLIC_BASE_PATH || '';
+  if (configuredBasePath) {
+    return normalizePrefix(configuredBasePath);
+  }
+
+  const originalPath = req.originalUrl.split('?')[0];
+  if (originalPath.endsWith(req.path)) {
+    return normalizePrefix(originalPath.slice(0, originalPath.length - req.path.length));
+  }
+  return normalizePrefix(req.baseUrl || '');
+};
+
+const withPrefix = (req: ExpressRequest, absolutePath: string): string => {
+  const prefix = getDeploymentPrefix(req);
+  return `${prefix}${absolutePath}`;
+};
+
+const getFormPrefix = (req: ExpressRequest, endpointPath: string = req.path): string => {
+  const fromBody = typeof req.body?.form_prefix === 'string' ? req.body.form_prefix : '';
+  return normalizePrefix(fromBody) || getDeploymentPrefix(req, endpointPath);
+};
 
 // Middleware to add SEU-style security headers
 casRouter.use((req, res, next) => {
@@ -75,6 +132,7 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
   };
 
   const normalizedRedirectUri = normalizeRedirectUri(redirect_uri as unknown as string | string[] | undefined);
+  const formPrefix = getDeploymentPrefix(req, '/cas/oauth2.0/authorize');
   // 设置当前的redirect_uri以便OAuth2验证时使用
   setCurrentRedirectUri(normalizedRedirectUri);
   
@@ -91,11 +149,7 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
   // 从本地JSON加载账号列表并生成账号卡片（不区分老师学生）
   let accountCardsHtml = '';
   try {
-    const localData = JSON.parse(
-      fs.readFileSync(path.join(dataPath, 'localOAuth2.json'), 'utf-8')
-    );
-    const users: User[] = Array.isArray(localData?.users) ? localData.users : [];
-    accountCardsHtml = users
+    accountCardsHtml = localUsers
       .map((u) => `
         <div class="account-card" onclick="fillAccount('${(u.id)}', '${(u.password)}')">
           <div class="account-main">${escapeHtml(u.realName || u.id)} (${escapeHtml(u.id)})</div>
@@ -180,7 +234,8 @@ casRouter.get('/cas/oauth2.0/authorize', (req: ExpressRequest, res: ExpressRespo
                     💡 点击上方卡片快速填入测试账号密码（来自 localOAuth2.json）
                 </div>
             </div>
-            <form method="post" action="/cas/oauth2.0/authorize">
+            <form method="post" action="${escapeHtml(withPrefix(req, '/cas/oauth2.0/authorize'))}">
+                <input type="hidden" name="form_prefix" value="${escapeHtml(formPrefix)}" />
                 <input type="hidden" name="client_id" value="${escapeHtml(req.query.client_id as string)}" />
                 <input type="hidden" name="redirect_uri" value="${escapeHtml(normalizedRedirectUri)}" />
                 <input type="hidden" name="response_type" value="${escapeHtml(req.query.response_type as string)}" />
@@ -220,7 +275,9 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
   console.log('redirect_uri from body:', req.body.redirect_uri);
   console.log('redirect_uri类型:', typeof req.body.redirect_uri);
   console.log('redirect_uri长度:', req.body.redirect_uri ? req.body.redirect_uri.length : 'undefined');
+  console.log('form_prefix:', req.body.form_prefix);
   console.log('================================');
+  const formPrefix = getFormPrefix(req, '/cas/oauth2.0/authorize');
   
   // 设置当前的redirect_uri以便OAuth2验证时使用（按请求域名规范化）
   const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
@@ -244,15 +301,7 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
   // Mock authentication function compatible with SEU system
   const authenticate = async () => {
     const { username, password } = req.body;
-    const files = fs.readdirSync(dataPath);
-    for (const file of files) {
-        const clientData = JSON.parse(fs.readFileSync(path.join(dataPath, file), 'utf-8'));
-        const user = clientData.users.find((u: User) => u.id === username && u.password === password);
-        if (user) {
-            return user;
-        }
-    }
-    return null;
+    return localUsers.find((u: User) => u.id === username && u.password === password) || null;
   };
 
   try {
@@ -268,7 +317,7 @@ casRouter.post('/cas/oauth2.0/authorize', async (req: ExpressRequest, res: Expre
       params.set('state', req.body.state || '');
       params.set('error', 'invalid_credentials');
       
-      const errorUrl = `/cas/oauth2.0/authorize?${params.toString()}`;
+      const errorUrl = `${formPrefix}/cas/oauth2.0/authorize?${params.toString()}`;
       console.log('认证失败，重定向到:', errorUrl);
       res.redirect(errorUrl);
       return;
@@ -394,7 +443,7 @@ casRouter.get('/cas/oauth2.0/callbackAuthorize', async (req: ExpressRequest, res
   const { client_id, redirect_uri, response_type, state, _client_name } = req.query;
   
   // Redirect to our authorize endpoint for processing
-  const authorizeUrl = `/cas/oauth2.0/authorize?${new URLSearchParams({
+  const authorizeUrl = `${withPrefix(req, '/cas/oauth2.0/authorize')}?${new URLSearchParams({
     client_id: client_id as string,
     redirect_uri: redirect_uri as string,
     response_type: response_type as string,
@@ -407,6 +456,7 @@ casRouter.get('/cas/oauth2.0/callbackAuthorize', async (req: ExpressRequest, res
 // Update login page to match SEU's SPA structure
 casRouter.get('/dist/main/login', (req: ExpressRequest, res: ExpressResponse) => {
   const serviceUrl = req.query.service as string;
+  const formPrefix = getDeploymentPrefix(req, '/dist/main/login');
   
   res.send(`
     <!DOCTYPE html>
@@ -557,7 +607,8 @@ casRouter.get('/dist/main/login', (req: ExpressRequest, res: ExpressResponse) =>
                 </div>
             </div>
             
-            <form method="post" action="/cas/oauth2.0/login">
+            <form method="post" action="${withPrefix(req, '/cas/oauth2.0/login')}">
+                <input type="hidden" name="form_prefix" value="${formPrefix}" />
                 <input type="hidden" name="service" value="${serviceUrl || ''}" />
                 
                 <div class="form-group">
@@ -588,20 +639,14 @@ casRouter.get('/dist/main/login', (req: ExpressRequest, res: ExpressResponse) =>
 // Handle login form submission
 casRouter.post('/cas/oauth2.0/login', async (req: ExpressRequest, res: ExpressResponse) => {
   const { username, password, service } = req.body;
+  const formPrefix = getFormPrefix(req, '/cas/oauth2.0/login');
   
   // Authenticate user
-  const files = fs.readdirSync(dataPath);
-  let user = null;
-  
-  for (const file of files) {
-    const clientData = JSON.parse(fs.readFileSync(path.join(dataPath, file), 'utf-8'));
-    user = clientData.users.find((u: User) => u.id === username && u.password === password);
-    if (user) break;
-  }
+  const user = localUsers.find((u: User) => u.id === username && u.password === password) || null;
   
   if (!user) {
     // Redirect back to login with error
-    res.redirect(`/dist/main/login?service=${encodeURIComponent(service)}&error=invalid_credentials`);
+    res.redirect(`${formPrefix}/dist/main/login?service=${encodeURIComponent(service)}&error=invalid_credentials`);
     return;
   }
   
@@ -650,7 +695,7 @@ casRouter.get('/dist/logOut', (req: ExpressRequest, res: ExpressResponse) => {
           <div class="logout-container">
               <h2 class="success">登出成功</h2>
               <p>您已成功登出东南大学统一身份认证系统</p>
-              <p><a href="/cas/oauth2.0/authorize">重新登录</a></p>
+              <p><a href="${withPrefix(req, '/cas/oauth2.0/authorize')}">重新登录</a></p>
           </div>
       </body>
       </html>
